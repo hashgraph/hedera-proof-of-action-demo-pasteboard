@@ -1,0 +1,10 @@
+{
+  "name": "proof-of-action-demo-pasteboard",
+  "version": "1.0.0",
+  "description": "Demonstration of the Hedera™ Proof of Action API where users can upload images and then later prove an image was uploaded.",
+  "main": "index.js",
+  "repository": "https://github.com/hashgraph/hedera-proof-of-action-demo-pasteboard.git",
+  "author": "Ryan Leckey <ryan@launchbadge.com>",
+  "license": "Apache-2.0",
+  "private": true
+}
