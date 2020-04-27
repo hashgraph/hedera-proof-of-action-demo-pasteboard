@@ -5,4 +5,8 @@
 node_modules/
 
 # cache
+.cache/
 .parcel-cache/
+
+# built files
+dist/
