@@ -1,2 +1,8 @@
 # editor files
 .idea/
+
+# npm dependencies
+node_modules/
+
+# cache
+.parcel-cache/
