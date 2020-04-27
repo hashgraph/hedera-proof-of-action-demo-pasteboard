@@ -1,6 +1,14 @@
 <template>
 <div class="box">
     <div v-if="isUploading" class="box-main">
+        <div class="message">
+            <div class="label">
+                Waiting for Consensus...
+            </div>
+            <div class="sub-label">
+                this may take a few seconds
+            </div>
+        </div>
     </div>
     <div v-else-if="notFound" class="box-main">
         <div class="label">
@@ -69,6 +77,19 @@
 <script lang="ts">
 import Vue from "vue";
 
+async function readFileAsBase64(file) {
+    const fileData = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            resolve(e.target.result);
+        };
+
+        reader.readAsBinaryString(file);
+    });
+
+    return window.btoa(fileData);
+}
+
 export default Vue.extend({
     data() {
         return {
@@ -109,27 +130,88 @@ export default Vue.extend({
         },
 
         handleCheck() {
-            this.notFound = true;
+            this.isUploading = true;
+
+            Vue.nextTick(async () => {
+                const getResponse = await fetch(
+                    `http://localhost:8080/v1/action?transactionId=${this.transactionId}`);
+
+                await this.handleCheckResponse(getResponse);
+            });
+        },
+
+        async handleCheckResponse(response) {
+            if (response.status === 200) {
+                const data = (await response.json())[0];
+
+                this.isUploading = false;
+
+                this.check = {
+                    transactionId: data.transactionId,
+                    timestamp: new Date(Date.parse(data.consensusTimestamp)),
+                    runningHash: data.runningHash,
+                    sequenceNumber: data.sequenceNumber
+                };
+            } else {
+                this.notFound = true;
+            }
         },
 
         handleCheckUpload() {
-            // this.isUploading = true;
-            this.check = {
-                transactionId: "0.0.21@232325t325.2332324",
-                timestamp: new Date(Date.now()),
-                runningHash: "1111sdfsdf",
-                sequenceNumber: 2391
-            };
+            this.isUploading = true;
+
+            Vue.nextTick(async () => {
+                // read the local file data as base-64
+                const fileB64 = await readFileAsBase64(this.file);
+                const getResponse = await fetch(
+                    `http://localhost:8080/v1/action/search`, {
+                        method: "POST",
+                        body: JSON.stringify({
+                            payload: fileB64,
+                        })
+                    });
+
+                await this.handleCheckResponse(getResponse);
+            });
         },
 
         handleUpload() {
-            // this.isUploading = true;
-            this.check = {
-                transactionId: "0.0.21@232325t325.2332324",
-                timestamp: new Date(Date.now()),
-                runningHash: "1111sdfsdf",
-                sequenceNumber: 2391
-            };
+            this.isUploading = true;
+
+            Vue.nextTick(async () => {
+                // read the local file data as base-64
+                const fileB64 = await readFileAsBase64(this.file);
+
+                // submit the action to the PoA service
+                const { transactionId } = await (await fetch(`http://localhost:8080/v1/action`,{
+                    method: "POST",
+                    body: JSON.stringify({
+                        payload: fileB64,
+                    })
+                })).json();
+
+                // wait for the action to be "proven"
+                let getResponse;
+
+                for (let attempt = 0; ; attempt++) {
+                    // Wait a bit until the next iteration
+                    await new Promise((resolve) => setTimeout(resolve, 2500));
+
+                    getResponse = await fetch(
+                        `http://localhost:8080/v1/action?transactionId=${transactionId}`);
+
+                    if (getResponse.status === 200) {
+                        // action is now proven
+                        break;
+                    }
+
+                    if (attempt > 10) {
+                        throw new Error("too many attempts; is the PoA service down?");
+                    }
+                }
+
+                await this.handleCheckResponse(getResponse);
+            });
         }
     }
 });
@@ -283,5 +365,15 @@ export default Vue.extend({
     font-size: 16px;
     color: #252525;
     margin-bottom: 15px;
+    word-break: break-all;
+    line-height: 1.5;
+}
+
+.message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    flex: 1;
 }
 </style>
