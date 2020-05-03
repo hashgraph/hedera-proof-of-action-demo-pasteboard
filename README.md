@@ -1,3 +1,5 @@
+![](https://img.shields.io/badge/maintenance-as--is-yellow)
+
 # Hedera™ Proof-of-Action Demo / Pasteboard
 
 Showcases Proof-of-Action (PoA) using the Hedera™ Consensus Service (HCS). 
