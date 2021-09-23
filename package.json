@@ -1,5 +1,5 @@
 {
-    "name": "proof-of-action-demo-pasteboard",
+    "name": "@hashgraph/proof-of-action-demo-pasteboard",
     "version": "1.0.0",
     "description": "Demonstration of the Hedera™ Proof of Action API where users can upload images and then later prove an image was uploaded.",
     "main": "index.js",
